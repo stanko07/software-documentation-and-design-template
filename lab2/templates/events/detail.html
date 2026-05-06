@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ event.title }} — tickets.ua{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{{ event.title }}</h1>
+  <div>
+    <a class="btn btn-secondary" href="{{ url_for('events.edit', event_id=event.id) }}">Edit</a>
+    <form method="post" action="{{ url_for('events.delete', event_id=event.id) }}" class="inline-form"
+          onsubmit="return confirm('Delete this event?')">
+      <button class="btn btn-danger" type="submit">Delete</button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <dl class="details">
+    <dt>Date &amp; Time</dt>
+    <dd>{{ event.date_time.strftime('%d %B %Y, %H:%M') }}</dd>
+    <dt>Venue</dt>
+    <dd>{{ event.venue.name }}</dd>
+    <dt>Address</dt>
+    <dd>{{ event.venue.address }}</dd>
+    <dt>City</dt>
+    <dd>{{ event.venue.city.name }}</dd>
+  </dl>
+</div>
+
+<h2>Ticket Types</h2>
+{% if event.ticket_types %}
+<table class="table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Price</th>
+      <th>Available</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for tt in event.ticket_types %}
+    <tr>
+      <td>{{ tt.name }}</td>
+      <td>{{ "%.2f"|format(tt.price) }} UAH</td>
+      <td>{{ tt.available_count }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+  <p class="empty">No ticket types defined for this event.</p>
+{% endif %}
+
+<div class="back-link">
+  <a href="{{ url_for('events.index') }}">&larr; Back to Events</a>
+</div>
+{% endblock %}

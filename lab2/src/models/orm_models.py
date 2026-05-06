@@ -25,7 +25,7 @@ class City(Base):
     id = Column(CHAR(36), primary_key=True, default=_uuid)
     name = Column(String(100), nullable=False, unique=True)
 
-    venues = relationship("Venue", back_populates="city")
+    venues = relationship("Venue", back_populates="city", cascade="all, delete-orphan")
 
 
 class Venue(Base):
@@ -37,7 +37,7 @@ class Venue(Base):
     city_id = Column(CHAR(36), ForeignKey("cities.id"), nullable=False)
 
     city = relationship("City", back_populates="venues")
-    events = relationship("Event", back_populates="venue")
+    events = relationship("Event", back_populates="venue", cascade="all, delete-orphan")
 
 
 class Event(Base):
@@ -49,7 +49,7 @@ class Event(Base):
     venue_id = Column(CHAR(36), ForeignKey("venues.id"), nullable=False)
 
     venue = relationship("Venue", back_populates="events")
-    ticket_types = relationship("TicketType", back_populates="event")
+    ticket_types = relationship("TicketType", back_populates="event", cascade="all, delete-orphan")
 
 
 class TicketType(Base):
@@ -62,7 +62,7 @@ class TicketType(Base):
     event_id = Column(CHAR(36), ForeignKey("events.id"), nullable=False)
 
     event = relationship("Event", back_populates="ticket_types")
-    order_items = relationship("OrderItem", back_populates="ticket_type")
+    order_items = relationship("OrderItem", back_populates="ticket_type", cascade="all, delete-orphan")
 
 
 class Customer(Base):
@@ -90,9 +90,9 @@ class Order(Base):
     customer_id = Column(CHAR(36), ForeignKey("customers.id"), nullable=False)
 
     customer = relationship("Customer", back_populates="orders")
-    items = relationship("OrderItem", back_populates="order")
-    payment = relationship("Payment", uselist=False, back_populates="order")
-    delivery = relationship("Delivery", uselist=False, back_populates="order")
+    items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
+    payment = relationship("Payment", uselist=False, back_populates="order", cascade="all, delete-orphan")
+    delivery = relationship("Delivery", uselist=False, back_populates="order", cascade="all, delete-orphan")
 
 
 class OrderItem(Base):

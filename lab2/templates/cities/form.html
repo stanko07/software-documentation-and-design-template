@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{% if city %}Edit City{% else %}New City{% endif %} — tickets.ua{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{% if city %}Edit City{% else %}New City{% endif %}</h1>
+</div>
+
+<div class="card">
+  <form method="post"
+        action="{{ url_for('cities.update', city_id=city.id) if city else url_for('cities.create') }}">
+    <div class="form-group">
+      <label for="name">City Name</label>
+      <input id="name" name="name" type="text" required
+             value="{{ city.name if city else '' }}">
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">
+        {% if city %}Save Changes{% else %}Create City{% endif %}
+      </button>
+      <a class="btn btn-secondary" href="{{ url_for('cities.index') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
