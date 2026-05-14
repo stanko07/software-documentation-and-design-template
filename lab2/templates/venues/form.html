@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{% if venue %}Edit Venue{% else %}New Venue{% endif %} — tickets.ua{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{% if venue %}Edit Venue{% else %}New Venue{% endif %}</h1>
+</div>
+
+<div class="card">
+  <form method="post"
+        action="{{ url_for('venues.update', venue_id=venue.id) if venue else url_for('venues.create') }}">
+    <div class="form-group">
+      <label for="name">Venue Name</label>
+      <input id="name" name="name" type="text" required
+             value="{{ venue.name if venue else '' }}">
+    </div>
+    <div class="form-group">
+      <label for="address">Address</label>
+      <input id="address" name="address" type="text" required
+             value="{{ venue.address if venue else '' }}">
+    </div>
+    <div class="form-group">
+      <label for="city_id">City</label>
+      <select id="city_id" name="city_id" required>
+        <option value="">— select city —</option>
+        {% for city in cities %}
+        <option value="{{ city.id }}"
+          {% if venue and venue.city_id == city.id %}selected{% endif %}>
+          {{ city.name }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">
+        {% if venue %}Save Changes{% else %}Create Venue{% endif %}
+      </button>
+      <a class="btn btn-secondary" href="{{ url_for('venues.index') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

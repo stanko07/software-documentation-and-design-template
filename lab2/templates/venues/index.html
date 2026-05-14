@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Venues — tickets.ua{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Venues</h1>
+  <a class="btn btn-primary" href="{{ url_for('venues.new') }}">+ New Venue</a>
+</div>
+
+{% if venues %}
+<table class="table">
+  <thead>
+    <tr><th>Name</th><th>Address</th><th>City</th><th>Actions</th></tr>
+  </thead>
+  <tbody>
+    {% for venue in venues %}
+    <tr>
+      <td>{{ venue.name }}</td>
+      <td>{{ venue.address }}</td>
+      <td>{{ venue.city.name }}</td>
+      <td class="actions">
+        <a class="btn btn-sm btn-secondary" href="{{ url_for('venues.edit', venue_id=venue.id) }}">Edit</a>
+        <form method="post" action="{{ url_for('venues.delete', venue_id=venue.id) }}" class="inline-form"
+              onsubmit="return confirm('Delete this venue?')">
+          <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+  <p class="empty">No venues yet.</p>
+{% endif %}
+{% endblock %}
