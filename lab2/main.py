@@ -9,6 +9,10 @@ Usage
     python main.py                              # uses data/tickets_data.csv
     python main.py --csv path/to/file.csv       # custom CSV path
     python main.py --db sqlite:///mydb.db       # custom DB URL
+
+Output strategy is controlled by config.json:
+    { "output": { "strategy": "console" } }   <- default
+    { "output": { "strategy": "kafka"   } }   <- switch to Kafka (no code change)
 """
 
 from __future__ import annotations
@@ -36,56 +40,60 @@ from src.dal.repositories.delivery_repository import DeliveryRepository
 # ── BLL service ───────────────────────────────────────────────────────────────
 from src.bll.services.import_service import ImportService
 
+# ── Output strategy (Lab 4) ───────────────────────────────────────────────────
+from src.output.strategy_factory import create_strategy
+from src.output.output_context import OutputContext
+
 
 def build_engine(db_url: str):
     return create_engine(db_url, echo=False)
 
 
 def run_import(csv_path: str, db_url: str) -> None:
-    # ── Database setup ───────────────────────────────────────────────────────
     engine = build_engine(db_url)
-    Base.metadata.create_all(engine)  # create tables if not present
+    Base.metadata.create_all(engine)
 
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    try:
-        # ── Compose DAL (Dependency Injection) ───────────────────────────────
-        csv_reader = CsvReader()
-        city_repo = CityRepository(session)
-        venue_repo = VenueRepository(session)
-        event_repo = EventRepository(session)
-        ticket_type_repo = TicketTypeRepository(session)
-        customer_repo = CustomerRepository(session)
-        order_repo = OrderRepository(session)
-        payment_repo = PaymentRepository(session)
-        delivery_repo = DeliveryRepository(session)
+    # OutputContext + strategy selected from config.json
+    with OutputContext(create_strategy()) as out:
+        try:
+            csv_reader = CsvReader()
+            city_repo         = CityRepository(session)
+            venue_repo        = VenueRepository(session)
+            event_repo        = EventRepository(session)
+            ticket_type_repo  = TicketTypeRepository(session)
+            customer_repo     = CustomerRepository(session)
+            order_repo        = OrderRepository(session)
+            payment_repo      = PaymentRepository(session)
+            delivery_repo     = DeliveryRepository(session)
 
-        # ── Compose BLL (Dependency Injection) ───────────────────────────────
-        import_service: ImportService = ImportService(
-            csv_reader=csv_reader,
-            city_repo=city_repo,
-            venue_repo=venue_repo,
-            event_repo=event_repo,
-            ticket_type_repo=ticket_type_repo,
-            customer_repo=customer_repo,
-            order_repo=order_repo,
-            payment_repo=payment_repo,
-            delivery_repo=delivery_repo,
-        )
+            import_service = ImportService(
+                csv_reader=csv_reader,
+                city_repo=city_repo,
+                venue_repo=venue_repo,
+                event_repo=event_repo,
+                ticket_type_repo=ticket_type_repo,
+                customer_repo=customer_repo,
+                order_repo=order_repo,
+                payment_repo=payment_repo,
+                delivery_repo=delivery_repo,
+            )
 
-        # ── Run import ───────────────────────────────────────────────────────
-        print(f"Importing from: {csv_path}")
-        print(f"Database:       {db_url}")
-        count = import_service.import_from_csv(csv_path)
-        session.commit()
-        print(f"Successfully imported {count} rows.")
+            out.write(f"Importing from: {csv_path}")
+            out.write(f"Database:       {db_url}")
 
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        session.close()
+            count = import_service.import_from_csv(csv_path)
+            session.commit()
+
+            out.write(f"Successfully imported {count} rows.")
+
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
 
 
 def _parse_args() -> argparse.Namespace:
